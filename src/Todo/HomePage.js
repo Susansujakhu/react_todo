@@ -9,54 +9,48 @@ import 'react-calendar/dist/Calendar.css';
 import firebase from "firebase";
 import Snackbar from '@material-ui/core/Snackbar';
 import Alert from '@material-ui/lab/Alert';
-import Card from '@material-ui/core/Card';
-import CardActionArea from '@material-ui/core/CardActionArea';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemText from '@material-ui/core/ListItemText';
 
-import Typography from '@material-ui/core/Typography';
-import { List } from '@material-ui/core';
 //import db from './firebase.config';
 
 export default function HomePage() {
-    
+
 
 
     const [todo, setTodo] = useState({ title: "", task: "" });
     const [todoDate, onChange] = useState(new Date());
     const [isSaving, setIsSaving] = useState(false);
     const [open, setOpen] = useState(false);
-    const [fetchResult,setfetchResult]=useState([]);
+    const [fetchResult, setfetchResult] = useState();
+    const [loading, isLoading] = useState(true);
 
-  
+
     useEffect(() => {
-        getTodo()
-       console.log("Call one time")
-    }, [true]);
-
-    const getTodo=async()=>  {
-        const firestore = firebase.firestore();
-        var result = firestore.collection("todo-list").get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                // doc.data() is never undefined for query doc snapshots
-                console.log(doc.id, " => ", doc.data());
-                setfetchResult(fetchResult => doc.data());
-                //console.log(fetchResult);
-            }); console.log(fetchResult);
-        })
-        .catch(function(error) {
-            console.log("Error getting documents: ", error);
+        getTodo().then(function (data) {
+            setfetchResult(data);
+            console.log(data);
+            isLoading(false)
         });
+        console.log("Call one time")
+    }, [isSaving]);
+
+    const getTodo = async () => {
+        const firestore = firebase.firestore();
+        const snapshot = await firestore.collection('todo-list').get();
+        return snapshot.docs.map(doc => doc.data());
+
         // const firestore = firebase.firestore();
         // const response =  firestore.collection('todo-list');
         // const data=await response.get();
- 
-        
+
+
         // data.docs.forEach(item=>{
         //     setfetchResult([...fetchResult,item.data()])
         //    })
-           
+
         //return snapshot.docs.map(doc => doc);
     }
 
@@ -96,40 +90,29 @@ export default function HomePage() {
         <div>
             <div>
                 <h2>This is ToDo App</h2>
-                
+
             </div>
-            
+
             <Grid container>
                 <Box boxShadow={10}
                     bgcolor="background.paper"
                     m={4}
                     p={2}
-                    style={{ width: '40vw', height: '75vh', overflow:'auto' }}>
-                    
-                    
-                    
-                    <Card>
+                    style={{ width: '40vw', height: '75vh', overflow: 'auto' }}>
 
-                        <CardActionArea>
-                            <CardContent>
-                                <Typography gutterBottom variant="h5" component="h2">
-                                    Lizard
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary" component="p">
-                                    Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                                    across all continents except Antarctica
-                                </Typography>
-                            </CardContent>
-                        </CardActionArea>
-                        <CardActions>
-                            <Button size="small" color="primary">
-                                Share
-        </Button>
-                            <Button size="small" color="primary">
-                                Learn More
-        </Button>
-                        </CardActions>
-                    </Card>
+                    {loading?<div>Loading</div>:
+                        <List>
+                        {fetchResult.map((item) =>
+                            <ListItem >
+
+                                <ListItemText primary={item.title} secondary={item.task} />
+                                <ListItemSecondaryAction>
+
+                                </ListItemSecondaryAction>
+                            </ListItem>
+
+                        )}
+                    </List>}
 
                 </Box>
 
