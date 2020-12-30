@@ -13,7 +13,14 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
-
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import IconButton from '@material-ui/core/IconButton';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 //import db from './firebase.config';
 
 export default function HomePage() {
@@ -26,21 +33,27 @@ export default function HomePage() {
     const [open, setOpen] = useState(false);
     const [fetchResult, setfetchResult] = useState();
     const [loading, isLoading] = useState(true);
+    const [dialog, setDialog] = useState(false);
+    const [selectedDoc, setSelectedDOc] = useState()
+    const [deleting, isDeleting] = useState(false)
+    const [empty, isEmpty] = useState(false)
 
-
+   
     useEffect(() => {
         getTodo().then(function (data) {
             setfetchResult(data);
-            console.log(data);
+            //console.log(data);
             isLoading(false)
         });
-        console.log("Call one time")
-    }, [isSaving]);
+        //console.log("Call one time")
+    }, [isSaving, deleting]);
 
     const getTodo = async () => {
         const firestore = firebase.firestore();
         const snapshot = await firestore.collection('todo-list').get();
-        return snapshot.docs.map(doc => doc.data());
+        snapshot.empty?isEmpty(true):isEmpty(false);
+        console.log(snapshot.empty);
+        return snapshot.docs.map(doc => doc);
 
         // const firestore = firebase.firestore();
         // const response =  firestore.collection('todo-list');
@@ -86,6 +99,34 @@ export default function HomePage() {
         })
     }
 
+    const onDeleteItem=()=>{
+        isDeleting(true);
+        const firestore = firebase.firestore();
+        
+        firestore.collection("todo-list").doc(selectedDoc).delete()
+        .then(function (){
+            isDeleting(false);
+            console.log("Successfull Deleted");
+        })
+        setDialog(false);
+        
+    }
+
+    const dialogClose = () => {
+       
+        setDialog(false);
+      };
+
+    const onSelectDocForDelete=(id)=>{
+        console.log(id);
+        setSelectedDOc(id);
+        
+        setDialog(true);
+        
+
+    }
+
+    
     return (
         <div>
             <div>
@@ -100,14 +141,27 @@ export default function HomePage() {
                     p={2}
                     style={{ width: '40vw', height: '75vh', overflow: 'auto' }}>
 
-                    {loading?<div>Loading</div>:
+                    {loading?<div>Loading...</div>:
+                        empty?<div>List is Empty <br/>Add Some Todo First</div>:
                         <List>
                         {fetchResult.map((item) =>
-                            <ListItem >
+                            <ListItem  style={{backgroundColor:'#81c784', padding:'15', marginBottom:5}}>
 
-                                <ListItemText primary={item.title} secondary={item.task} />
+                                <ListItemText>
+                                <label>{item.data().TodoDate.toDate().toDateString()}</label><br/>
+                                <b>{item.data().title} </b><br/>
+                                <label>{item.data().task}</label>
+                                   
+                                   
+                                </ListItemText>  
                                 <ListItemSecondaryAction>
-
+                                <IconButton edge='end' aria-label='edit' >
+                                <EditIcon/>
+                                </IconButton>
+                                <IconButton edge='end' aria-label='delete' >
+                                <DeleteIcon onClick={()=>onSelectDocForDelete(item.id)} />
+                                </IconButton>
+                                
                                 </ListItemSecondaryAction>
                             </ListItem>
 
@@ -115,6 +169,30 @@ export default function HomePage() {
                     </List>}
 
                 </Box>
+
+                <Dialog
+        open={dialog}
+        onClose={dialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Do you want to delete this Todo?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            You cannot Undo this action.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={dialogClose} color="primary">
+            Disagree
+          </Button>
+          <Button onClick={onDeleteItem} color="primary" autoFocus>
+            Agree
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
 
                 <Box boxShadow={10}
                     bgcolor="background.paper"
