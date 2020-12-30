@@ -38,7 +38,8 @@ export default function HomePage() {
     const [deleting, isDeleting] = useState(false)
     const [empty, isEmpty] = useState(false)
 
-   
+
+
     useEffect(() => {
         getTodo().then(function (data) {
             setfetchResult(data);
@@ -51,8 +52,8 @@ export default function HomePage() {
     const getTodo = async () => {
         const firestore = firebase.firestore();
         const snapshot = await firestore.collection('todo-list').get();
-        snapshot.empty?isEmpty(true):isEmpty(false);
-        console.log(snapshot.empty);
+        snapshot.empty ? isEmpty(true) : isEmpty(false);
+        
         return snapshot.docs.map(doc => doc);
 
         // const firestore = firebase.firestore();
@@ -68,8 +69,9 @@ export default function HomePage() {
     }
 
     function handleChange(event) {
-        todo[event.target.id] = event.target.value
+        todo[event.target.id] = event.target.value;
         setTodo({ ...todo, todo });
+   
     }
 
     const handleClose = (event, reason) => {
@@ -91,42 +93,42 @@ export default function HomePage() {
             title: todo.title,
             task: todo.task
         }).then(function (response) {
-            setTodo({ title: "", task: "" })
+            setTodo({ title: "", task: "" });
+            onChange(new Date());
             setOpen(true);
             setIsSaving(false);
         }).catch(function (error) {
             setIsSaving(false);
         })
-    }
+    };
 
-    const onDeleteItem=()=>{
+    const onDeleteItem = () => {
         isDeleting(true);
         const firestore = firebase.firestore();
-        
+
         firestore.collection("todo-list").doc(selectedDoc).delete()
-        .then(function (){
-            isDeleting(false);
-            console.log("Successfull Deleted");
-        })
+            .then(function () {
+                isDeleting(false);
+                console.log("Successfull Deleted");
+            }).catch(function (error) {
+                isDeleting(false);
+            })
         setDialog(false);
-        
-    }
+
+    };
 
     const dialogClose = () => {
-       
+        
         setDialog(false);
-      };
+    };
 
-    const onSelectDocForDelete=(id)=>{
-        console.log(id);
+    const onSelectDocForDelete = (id) => {
+        
         setSelectedDOc(id);
-        
         setDialog(true);
-        
-
     }
-
     
+
     return (
         <div>
             <div>
@@ -140,58 +142,55 @@ export default function HomePage() {
                     m={4}
                     p={2}
                     style={{ width: '40vw', height: '75vh', overflow: 'auto' }}>
+                    
+                    {loading ? <div>Loading...</div> :
+                        empty ? <div>List is Empty <br />Add Some Todo First</div> :
+                            <List>
+                                {fetchResult.map((item) =>
+                                    <ListItem style={{ backgroundColor: '#81c784', padding: '15', marginBottom: 5 }}>
 
-                    {loading?<div>Loading...</div>:
-                        empty?<div>List is Empty <br/>Add Some Todo First</div>:
-                        <List>
-                        {fetchResult.map((item) =>
-                            <ListItem  style={{backgroundColor:'#81c784', padding:'15', marginBottom:5}}>
+                                        <ListItemText>
+                                            <label>{item.data().TodoDate.toDate().toDateString()}</label><br />
+                                            <b>{item.data().title} </b><br />
+                                            <label>{item.data().task}</label>
 
-                                <ListItemText>
-                                <label>{item.data().TodoDate.toDate().toDateString()}</label><br/>
-                                <b>{item.data().title} </b><br/>
-                                <label>{item.data().task}</label>
-                                   
-                                   
-                                </ListItemText>  
-                                <ListItemSecondaryAction>
-                                <IconButton edge='end' aria-label='edit' >
-                                <EditIcon/>
-                                </IconButton>
-                                <IconButton edge='end' aria-label='delete' >
-                                <DeleteIcon onClick={()=>onSelectDocForDelete(item.id)} />
-                                </IconButton>
-                                
-                                </ListItemSecondaryAction>
-                            </ListItem>
 
-                        )}
-                    </List>}
+                                        </ListItemText>
+                                        <ListItemSecondaryAction>
+                                            
+                                            <IconButton edge='end' aria-label='delete' >
+                                                <DeleteIcon onClick={() => onSelectDocForDelete(item.id)} />
+                                            </IconButton>
+
+                                        </ListItemSecondaryAction>
+                                    </ListItem>
+
+                                )}
+                            </List>}
 
                 </Box>
 
                 <Dialog
-        open={dialog}
-        onClose={dialogClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Do you want to delete this Todo?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            You cannot Undo this action.
+                    open={dialog}
+                    onClose={dialogClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{"Do you want to delete this Todo?"}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            You cannot Undo this action.
           </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={dialogClose} color="primary">
-            Disagree
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={dialogClose} color="primary">
+                            Disagree
           </Button>
-          <Button onClick={onDeleteItem} color="primary" autoFocus>
-            Agree
+                        <Button onClick={onDeleteItem} color="primary" autoFocus>
+                            Agree
           </Button>
-        </DialogActions>
-      </Dialog>
-
+                    </DialogActions>
+                </Dialog>
 
 
                 <Box boxShadow={10}
@@ -199,21 +198,25 @@ export default function HomePage() {
                     m={4}
                     p={2}
                     style={{ width: '40vw', height: '75vh' }}>
-                    <center>
+                    <b style={{ fontSize: 20, }}><label>Create New Todo</label></b>
+
+                    <center style={{ paddingTop: 10 }}>
                         <Calendar
                             onChange={onChange}
-                            value={todoDate}
-
+                            value = {todoDate}
+                       
                         />
                     </center>
                     <TextField
-                        style={{ width: '36vw', padding: 35, paddingBottom: 1 }}
+                        style={{ width: '36vw', padding: 35, paddingBottom: 1, paddingTop: 10 }}
                         id="title"
                         placeholder="Title"
                         multiline
                         rows={1}
                         onChange={handleChange}
-                        value={todo.title}
+                        
+                        value= {todo.title}
+                        
                         variant="outlined"
                         disabled={isSaving}
                     />
@@ -225,15 +228,16 @@ export default function HomePage() {
                         multiline
                         rows={3}
                         onChange={handleChange}
+                        
                         value={todo.task}
                         variant="outlined"
                         disabled={isSaving}
                     />
-
+                    {
                     <Button onClick={handleSave} disabled={isSaving} variant="contained" color="primary" style={{ float: 'right', marginRight: 20, marginTop: -20 }}>
                         Save
                         </Button>
-
+                    }
                 </Box>
             </Grid>
             <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
